@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Calendar,
   Home,
@@ -6,7 +7,7 @@ import {
   MapPin,
   Menu,
   Sprout,
-  Users,
+  User,
   Utensils,
   X
 } from "lucide-react";
@@ -16,15 +17,19 @@ import { Link, useLocation } from "react-router-dom";
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-
+  const { userId } = useAuth();
   const navItems = [
     { path: "/", label: "Início", icon: Home },
     // { path: "/dashboard", label: "Painel", icon: LayoutDashboard },
     { path: "/map", label: "Mapa das Hortas", icon: MapPin },
     // { path: "/recipes", label: "Receitas", icon: BookOpen },
-    { path: "/producer", label: "Área do Produtor", icon: Users },
+   
     { path: "/make-recipe", label: "Receitas", icon: Utensils },
-    { path: "/green-calendar-intro", label: "Calendario verde", icon: Calendar },
+    {
+      path: "/green-calendar-intro",
+      label: "Calendario verde",
+      icon: Calendar,
+    },
     { path: "/guide", label: "Guia do cultivo", icon: Sprout },
   ];
 
@@ -65,9 +70,18 @@ const Navigation = () => {
                 </Link>
               );
             })}
-            <Button asChild size="sm" className="ml-4">
-              <Link to="/login">Entrar</Link>
-            </Button>
+
+            {!userId ? (
+              <Button asChild size="sm" className="ml-4">
+                <Link to="/login">Entrar</Link>
+              </Button>
+            ):(
+              <Link to={'/producer'}>
+                <div className="p-2 rounded-full text-white bg-green-500 hover:bg-green-500/60">
+                  <User size={20}/>
+                </div>
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -110,11 +124,19 @@ const Navigation = () => {
                   </Link>
                 );
               })}
-              <div className="px-3 pt-3">
-                <Button asChild size="sm" className="w-full">
-                  <Link to="/login">Entrar</Link>
-                </Button>
-              </div>
+              {!userId ? (
+                <div className="px-3 pt-3">
+                  <Button asChild size="sm" className="w-full">
+                    <Link to="/login">Entrar</Link>
+                  </Button>
+                </div>
+              ):(
+                <div className="px-3 pt-3">
+                  <Button asChild size="sm" className="w-full">
+                    <Link to="/producer">Usuario</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}

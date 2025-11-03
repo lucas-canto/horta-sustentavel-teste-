@@ -14,10 +14,13 @@ import Producer from "./pages/Producer";
 import Recipes from "./pages/Recipes";
 
 import { useEffect } from "react";
+import { ProtectedBaseRoute } from "./components/Protected-route";
 import { GreenCalendarIntro } from "./pages/GreenCalendarIntro";
 import { GreenCalendarPrompt } from "./pages/GreenCalendarPrompt";
 import { GuideIntro } from "./pages/GuideIntro";
 import { GuidePrompt } from "./pages/GuidePrompt";
+import { ViewUser } from "./pages/ViewUser";
+import { AuthProvider } from "./providers/auth-provider";
 
 const AppContent = () => {
   const location = useLocation();
@@ -39,13 +42,24 @@ const AppContent = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/map" element={<Map />} />
         <Route path="/recipes" element={<Recipes />} />
-        <Route path="/producer" element={<Producer />} />
+        <Route
+          path="/producer"
+          element={
+            <ProtectedBaseRoute>
+              <Producer />
+            </ProtectedBaseRoute>
+          }
+        />
+        <Route path="/:id" element={<ViewUser />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/make-recipe" element={<MakeRecipe />} />
         <Route path="/guide" element={<GuideIntro />} />
         <Route path="/guide-prompt" element={<GuidePrompt />} />
         <Route path="/green-calendar-intro" element={<GreenCalendarIntro />} />
-        <Route path="/green-calendar-prompt" element={<GreenCalendarPrompt />} />
+        <Route
+          path="/green-calendar-prompt"
+          element={<GreenCalendarPrompt />}
+        />
       </Routes>
     </div>
   );
@@ -56,13 +70,15 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

@@ -26,7 +26,11 @@ export async function PostGerarGuia({
 }: PostGerarReceitaRequest) {
 
 
-  const res = await api.post<GuiaPlanta>("/guia_cultivo.php", {data,cidade,planta,metodo_cultivo});
+  const res = await api.post<GuiaPlanta>("/guia_cultivo.php", {data,cidade,planta,metodo_cultivo}, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
   return res.data;
 }

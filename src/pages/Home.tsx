@@ -66,7 +66,7 @@ const Home = () => {
   const initialActions = [
     {
       label: "Aprenda a cultivar",
-      value: "make-recipe",
+      value: "guide",
       icon: Sprout,
     },
     {
@@ -76,12 +76,12 @@ const Home = () => {
     },
     {
       label: "Descubra as tendências de cultivo",
-      value: "make-recipe",
+      value: "green-calendar-intro",
       icon: Calendar,
     },
     {
       label: "Veja hortas perto de você",
-      value: "make-recipe",
+      value: "map",
       icon: MapPin,
     },
   ];
@@ -116,10 +116,11 @@ const Home = () => {
             {initialActions.map((action, i) => {
               const Icon = action.icon;
               return (
+                <Link to={`/${action.value}`}>
                 <div className="flex flex-col hover:text-green-300 cursor-pointer hover:bg-primary/10 hover:border-secondary ease-in-out transition-all justify-center items-center border border-white bg-white/10 p-2 rounded-lg">
                   <Icon />
                   <p>{action.label}</p>
-                </div>
+                </div></Link>
               );
             })}
           </div>

@@ -1,34 +1,62 @@
-import { PostGerarReceita } from "@/service/PostGerarReceita";
+import { PostCalendarioVerde } from "@/service/postCalendarioVerde";
 import { useMutation } from "@tanstack/react-query";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { Download, RefreshCw } from "lucide-react";
-
-
+import { useRef, useState } from "react";
 
 export function GreenCalendarPrompt() {
-
-
   const { mutate, isPending, data } = useMutation({
-    mutationFn: PostGerarReceita,
+    mutationFn: PostCalendarioVerde,
   });
 
+  const [city, setCity] = useState("");
+  const [date, setDate] = useState<Date>(new Date());
 
-
-
+  // 🔹 Referência à seção que será exportada
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   function handleGenerateRecipe() {
-
-
+    mutate({
+      cidade: city,
+      data:
+        date.getDate().toString().padStart(2, "0") +
+        "/" +
+        (date.getMonth() + 1).toString().padStart(2, "0") +
+        "/" +
+        date.getFullYear(),
+    });
   }
 
+  // 🔹 Gera o PDF da div referenciada
+  async function handleDownloadPDF() {
+    if (!pdfRef.current) return;
+    const element = pdfRef.current;
 
+    const canvas = await html2canvas(element, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "p",
+      unit: "pt",
+      format: "a4",
+    });
+
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`Calendario-Verde-${city}.pdf`);
+  }
 
   return (
     <div className="flex-1 h-screen flex md:flex-row flex-col">
       {/* SEÇÃO ESQUERDA */}
       <div className="md:w-[46%] relative p-7">
-        <p className="text-xl shadow-slate-9 font-semibold">
-          Monte sua receita
-        </p>
+        <p className="text-xl shadow-slate-9 font-semibold">Calendario verde</p>
 
         <div className="sticky top-10 shadow-2xl h-[80vh] gap-5 flex flex-col p-4 rounded-lg bg-white">
           <div className="flex-1 flex items-center justify-center flex-col">
@@ -37,9 +65,22 @@ export function GreenCalendarPrompt() {
                 Quais sao as tendencias de plantio para quem mora em...
               </p>
               <input
-                className="border-b border-b-primary w-full focus:outline-none text-center text-2xl font-semibold placeholder:text-primary/50"
+                className="border-b text-[#247C45] border-b-primary w-full focus:outline-none text-center text-2xl font-semibold placeholder:text-primary/50"
                 type="text"
+                onChange={(e) => setCity(e.target.value)}
                 placeholder="insira aqui sua cidade"
+              />
+            </div>
+
+            <div className="items-center gap-2 flex flex-col mb-5">
+              <p className="text-center w-[70%]">
+                Data personalizada para plantio
+              </p>
+              <input
+                className="border-b text-[#247C45] border-b-primary w-full focus:outline-none text-center text-2xl font-semibold placeholder:text-primary/50"
+                type="date"
+                onChange={(e) => setDate(new Date(e.target.value))}
+                defaultValue={new Date().toISOString().split("T")[0]}
               />
             </div>
           </div>
@@ -58,71 +99,66 @@ export function GreenCalendarPrompt() {
         </div>
       </div>
 
-      {/* SEÇÃO DIREITA (RECEITA GERADA) */}
+      {/* SEÇÃO DIREITA */}
       <div className="flex-1 pb-[400px] p-3 bg-[#49DE80]/30 overflow-y-auto">
         <div
-    
           className="no-print w-[200px] mb-3 cursor-pointer ml-auto p-2 text-white flex gap-2 items-center justify-center rounded-md bg-[#247C45]"
+          onClick={handleDownloadPDF}
         >
           <Download width={20} height={20} />
           Salvar como PDF
         </div>
-        <div
-          
-          className="bg-white rounded-tr-xl rounded-b-xl p-8"
-        >
-          {data ? (
-            <>
-              <h2 className="text-2xl font-bold mt-5 mb-3">
-                {data.NomeDaReceita}
-              </h2>
-              <p className="mb-5">{data.Descricao}</p>
 
-              <h3 className="text-xl font-semibold mb-2">Ingredientes</h3>
-              <ul className="list-disc ml-5 mb-5">
-                {data.Ingredientes.map((item: string, i: number) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-
-              <h3 className="text-xl font-semibold mb-2">Instruções</h3>
-              <ol className="list-decimal ml-5 mb-5">
-                {data.Instrucoes.map((step: string, i: number) => (
-                  <li key={i}>{step}</li>
-                ))}
-              </ol>
-
-              <p className="mb-2">
-                <strong>Tempo de Preparo:</strong> {data.TempoDePreparo}
-              </p>
-              <p className="mb-5">
-                <strong>Porções:</strong> {data.Porcoes}
-              </p>
-
-              <h3 className="text-xl font-semibold mb-2">Tabela Nutricional</h3>
-              <ul className="list-disc ml-5">
-                <li>
-                  <strong>Calorias:</strong> {data.TabelaNutricional.Calorias}
-                </li>
-                <li>
-                  <strong>Carboidratos:</strong>{" "}
-                  {data.TabelaNutricional.Carboidratos}
-                </li>
-                <li>
-                  <strong>Proteínas:</strong> {data.TabelaNutricional.Proteinas}
-                </li>
-                <li>
-                  <strong>Gorduras:</strong> {data.TabelaNutricional.Gorduras}
-                </li>
-              </ul>
-            </>
-          ) : (
-            isPending && (
-              <div className="flex items-center justify-center h-full">
-                <RefreshCw className="animate-spin text-[#247C45]" size={30} />
-              </div>
-            )
+        {/* 🔹 O conteúdo que será exportado */}
+        <div ref={pdfRef} className="bg-white rounded-tr-xl rounded-b-xl p-8">
+          {data && (
+            <h2 className="text-2xl font-bold text-green-700 mb-4">
+              Tendências de plantio ({city} -{" "}
+              {date.getDate().toString().padStart(2, "0") +
+                "/" +
+                (date.getMonth() + 1).toString().padStart(2, "0") +
+                "/" +
+                date.getFullYear()}
+              )
+            </h2>
           )}
+
+          <div className="gap-4 flex flex-col">
+            {data
+              ? data.sugestoes.map((item, i) => (
+                  <div key={i} className="flex flex-col gap-2 border-b pb-2">
+                    <p className="font-semibold text-lg text-[#247C45]">
+                      {item.produto}
+                    </p>
+                    <div className="ml-4">
+                      <p className="font-semibold">Sazonalidade</p>
+                      <p className="text-sm text-slate-600">
+                        {item.motivo_sazonalidade}
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <p className="font-semibold">Mercado</p>
+                      <p className="text-sm text-slate-600">
+                        {item.motivo_mercado}
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <p className="font-semibold">Dica de Cultivo</p>
+                      <p className="text-sm text-slate-600">
+                        {item.dica_cultivo}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              : isPending && (
+                  <div className="flex items-center justify-center h-full">
+                    <RefreshCw
+                      className="animate-spin text-[#247C45]"
+                      size={30}
+                    />
+                  </div>
+                )}
+          </div>
         </div>
       </div>
     </div>

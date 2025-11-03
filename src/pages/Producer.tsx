@@ -1,364 +1,316 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Leaf, 
-  MapPin, 
-  Camera, 
-  Save, 
-  Plus,
-  Building,
-  Phone,
-  Mail,
-  Clock,
-  Users,
-  Target
-} from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { GetEstoque } from "@/service/getEstoque";
+import { GetHorta } from "@/service/getHorta";
+import { PostAddEstoque } from "@/service/postAdd";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Building, Plus, RefreshCw, Sprout } from "lucide-react";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { CadastrarHortaForm } from "./components/cadastrarHortaForm";
+import { Cardhorta } from "./components/cardHorta";
+import { ProductDialogContent } from "./components/ProductDialogContent";
 
-interface GardenProfile {
-  name: string;
-  address: string;
-  description: string;
-  coordinator: string;
-  phone: string;
-  email: string;
-  openHours: string;
-  capacity: string;
-  objectives: string;
-  image?: string;
-}
+// Schema Zod
+const AddHortSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+  desc: z.string().optional(),
+  typeMov: z.enum(["entrada", "saida"]),
+  dt_plantio: z.string(),
+  dt_colheita: z.string(),
+  valor: z.preprocess((val) => Number(val), z.number()),
+  medida: z.enum(["kg", "unidade"]),
+  motivo: z.string(),
+});
+
+type AddHortaSchemaType = z.infer<typeof AddHortSchema>;
 
 const Producer = () => {
-  const [gardenData, setGardenData] = useState<GardenProfile>({
-    name: "",
-    address: "",
-    description: "",
-    coordinator: "",
-    phone: "",
-    email: "",
-    openHours: "",
-    capacity: "",
-    objectives: ""
+  const { userId, token } = useAuth();
+  const { toast } = useToast();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    resetField,
+    formState: { errors },
+  } = useForm<AddHortaSchemaType>({
+    resolver: zodResolver(AddHortSchema),
   });
 
-  const [isEditing, setIsEditing] = useState(true);
-  const { toast } = useToast();
+  const typeMov = watch("typeMov");
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!gardenData.name || !gardenData.address || !gardenData.coordinator) {
-      toast({
-        title: "Erro no cadastro",
-        description: "Por favor, preencha todos os campos obrigatórios.",
-        variant: "destructive",
+  const { mutate, data, isPending } = useMutation({
+    mutationKey: ["Horta"],
+    mutationFn: GetHorta,
+    onSuccess: (msg) => console.log(msg),
+  });
+  const queryClient = useQueryClient();
+  const {
+    mutate: MutateGetEstoque,
+    data: DataGetEstoque,
+    isPending: isPendingEstoque,
+  } = useMutation({
+    mutationKey: ["Horta"],
+    mutationFn: GetEstoque,
+    onSuccess: () => {
+      queryClient.refetchQueries({ queryKey: ["Horta"] });
+    },
+  });
+
+  useEffect(() => {
+    if (userId) {
+      MutateGetEstoque({
+        id_produtor: userId,
       });
-      return;
     }
+  }, [userId]);
 
-    setIsEditing(false);
-    toast({
-      title: "Perfil salvo com sucesso!",
-      description: "Sua horta foi cadastrada e estará visível no mapa.",
+  const { mutate: MutateAddMov, reset: resetAddMov } = useMutation({
+    mutationFn: PostAddEstoque,
+    onSuccess: () => {
+      toast({
+        title: "Sucesso!",
+        description: "Sua entrada foi realizada com sucesso!",
+      });
+      resetAddMov();
+    },
+    onError: (err) => {
+      toast({
+        title: "Erro!",
+        description: `Erro: ${err}`,
+      });
+    },
+  });
+
+  function handleAddMov(data: AddHortaSchemaType) {
+    console.log(data);
+    MutateAddMov({
+      token: token,
+      descricao_produto: data.desc,
+      dt_colheita: data.dt_colheita,
+      dt_plantio: data.dt_plantio,
+      motivo: data.motivo,
+      nome_produto: data.name,
+      quantidade: data.valor,
+      unidade: data.medida,
     });
-  };
+  }
 
-  const features = [
-    {
-      icon: Target,
-      title: "Impacto Social",
-      description: "Contribua para o ODS 2 promovendo segurança alimentar na sua comunidade"
-    },
-    {
-      icon: Users,
-      title: "Conectar Pessoas",
-      description: "Una produtores e consumidores locais através da agricultura sustentável"
-    },
-    {
-      icon: Leaf,
-      title: "Agricultura Sustentável",
-      description: "Promova práticas ecológicas e educação ambiental"
+  // Reset motivo quando typeMov mudar
+  useEffect(() => {
+    resetField("motivo");
+  }, [typeMov]);
+
+  useEffect(() => {
+    mutate({ id_produtor: userId.toString() });
+  }, []);
+
+  useEffect(() => {
+    if (data) {
+      console.log(data);
     }
-  ];
+  }, [data]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center shadow-elegant">
-              <Building className="w-8 h-8 text-primary-foreground" />
-            </div>
-          </div>
-          <h1 className="text-4xl font-bold text-foreground mb-4">
-            Área do Produtor
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Cadastre sua horta comunitária e conecte-se com a rede de produtores sustentáveis
-          </p>
+    <div className="min-h-screen gap-10 flex flex-col bg-background px-10 pt-3">
+      <div className="flex flex-col items-center text-3xl font-bold">
+        <div className="p-3 bg-green-600 rounded-full">
+          <Building className="text-white" />
         </div>
+        <h1>Área do Produtor</h1>
+      </div>
 
-        {/* Impact Section */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <Card key={index} className="text-center border-none shadow-soft">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon className="w-6 h-6 text-primary-foreground" />
-                  </div>
-                  <CardTitle className="text-lg">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-sm">
-                    {feature.description}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            );
-          })}
+      {isPending ? (
+        <RefreshCw className="animate-spin mx-auto text-[#247C45]" size={30} />
+      ) : data?.horta ? (
+        <div className="flex flex-col items-center">
+          <Cardhorta data={data.horta} />
         </div>
+      ) : (
+        <div className="flex flex-col items-center">
+          <CadastrarHortaForm />
+        </div>
+      )}
 
-        {/* Garden Profile Form */}
-        <Card className="shadow-elegant">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <Leaf className="w-6 h-6 text-primary" />
-                  Perfil da Horta Comunitária
-                </CardTitle>
-                <CardDescription>
-                  Complete as informações para cadastrar sua horta no sistema
-                </CardDescription>
-              </div>
-              {!isEditing && (
-                <Button onClick={() => setIsEditing(true)} variant="outline">
-                  Editar
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            {isEditing ? (
-              <form onSubmit={handleSave} className="space-y-6">
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Informações Básicas</h3>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Nome da Horta *</Label>
-                      <Input
-                        id="name"
-                        placeholder="Ex: Horta Comunitária Vila Verde"
-                        value={gardenData.name}
-                        onChange={(e) => setGardenData({ ...gardenData, name: e.target.value })}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="coordinator">Nome do Coordenador *</Label>
-                      <Input
-                        id="coordinator"
-                        placeholder="Seu nome completo"
-                        value={gardenData.coordinator}
-                        onChange={(e) => setGardenData({ ...gardenData, coordinator: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Endereço Completo *</Label>
-                    <Input
-                      id="address"
-                      placeholder="Rua, número, bairro, cidade, estado"
-                      value={gardenData.address}
-                      onChange={(e) => setGardenData({ ...gardenData, address: e.target.value })}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Descrição da Horta</Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Descreva sua horta, objetivos, metodologia utilizada..."
-                      value={gardenData.description}
-                      onChange={(e) => setGardenData({ ...gardenData, description: e.target.value })}
-                      rows={4}
-                    />
-                  </div>
+      <div className="mx-auto w-full">
+        <div className="text-green-600 text-lg flex flex-col items-center">
+          <Sprout />
+          <p className="font-bold">Controle de colheita</p>
+        </div>
+        {DataGetEstoque?.horta?.produtos &&
+          DataGetEstoque.horta.produtos.length <= 0 && (
+            <Dialog>
+              <DialogTrigger className="w-full flex justify-center">
+                <div className="">
+                  <span className="flex flex-row p-2 border-green-600 text-green-600 border items-center  rounded-md ">
+                    <Plus size={20} className="" />
+                    <p>Adicionar Hortaliça</p>
+                  </span>
                 </div>
+              </DialogTrigger>
+              <DialogContent>
+                <form onSubmit={handleSubmit(handleAddMov)} className="w-full">
+                  <div className=" gap-4 flex flex-col border rounded-sm p-3">
+                    <p className="text-xl font-semibold">Adicionar Hortaliça</p>
 
-                {/* Contact Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Informações de Contato</h3>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input
-                        id="phone"
-                        placeholder="(00) 00000-0000"
-                        value={gardenData.phone}
-                        onChange={(e) => setGardenData({ ...gardenData, phone: e.target.value })}
+                    <label className="flex flex-col">
+                      Nome
+                      <input
+                        {...register("name")}
+                        type="text"
+                        placeholder="Batata"
+                        className="p-1 border rounded-sm w-full"
                       />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">E-mail</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="contato@horta.com"
-                        value={gardenData.email}
-                        onChange={(e) => setGardenData({ ...gardenData, email: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                </div>
+                      {errors.name && (
+                        <p className="text-red-500">{errors.name.message}</p>
+                      )}
+                    </label>
 
-                {/* Operational Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Informações Operacionais</h3>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="openHours">Horário de Funcionamento</Label>
-                      <Input
-                        id="openHours"
-                        placeholder="Ex: Seg-Sex: 8h-18h | Sáb: 8h-14h"
-                        value={gardenData.openHours}
-                        onChange={(e) => setGardenData({ ...gardenData, openHours: e.target.value })}
+                    <label className="flex flex-col">
+                      Descrição da hortaliça
+                      <input
+                        {...register("desc")}
+                        type="text"
+                        placeholder="Cor vermelha"
+                        className="p-1 border rounded-sm w-full"
                       />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="capacity">Capacidade/Área</Label>
-                      <Input
-                        id="capacity"
-                        placeholder="Ex: 50 participantes ou 500m²"
-                        value={gardenData.capacity}
-                        onChange={(e) => setGardenData({ ...gardenData, capacity: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="objectives">Objetivos e Metas</Label>
-                    <Textarea
-                      id="objectives"
-                      placeholder="Descreva os objetivos sociais e ambientais da sua horta..."
-                      value={gardenData.objectives}
-                      onChange={(e) => setGardenData({ ...gardenData, objectives: e.target.value })}
-                      rows={3}
-                    />
-                  </div>
-                </div>
+                    </label>
 
-                {/* Image Upload */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Imagem da Horta</h3>
-                  <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                    <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground mb-4">
-                      Adicione uma foto da sua horta para atrair mais participantes
-                    </p>
-                    <Button variant="outline" type="button">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Escolher Foto
+                    <label className="flex flex-col">
+                      Tipo da movimentação
+                      <select
+                        {...register("typeMov")}
+                        className="border rounded-md p-2 w-full focus:outline-green-600"
+                      >
+                        <option value="entrada">Entrada</option>
+                      </select>
+                    </label>
+
+                    <label className="flex flex-col">
+                      Data do plantio
+                      <input
+                        {...register("dt_plantio")}
+                        type="date"
+                        className="p-1 border rounded-sm w-full"
+                      />
+                    </label>
+
+                    <label className="flex flex-col">
+                      Data da última colheita
+                      <input
+                        {...register("dt_colheita")}
+                        type="date"
+                        className="p-1 border rounded-sm w-full"
+                      />
+                    </label>
+
+                    <label className="flex flex-col">
+                      Valor
+                      <div className="flex gap-2">
+                        <input
+                          {...register("valor")}
+                          type="number"
+                          placeholder="0"
+                          className="p-1 border rounded-sm w-full"
+                        />
+                        <select
+                          {...register("medida")}
+                          className="border rounded-md p-2 w-full focus:outline-green-600"
+                        >
+                          <option value="kg">Kg</option>
+                          <option value="unidade">Unidade</option>
+                        </select>
+                      </div>
+                    </label>
+
+                    <label className="flex flex-col">
+                      Motivo
+                      <select
+                        {...register("motivo")}
+                        className="border rounded-md p-2 w-full focus:outline-green-600"
+                      >
+                        {typeMov === "saida" ? (
+                          <>
+                            <option value="venda">Venda</option>
+                            <option value="consumo">Consumo</option>
+                            <option value="perda/disperdicio">
+                              Perda/Disperdício
+                            </option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="colheita">Colheita</option>
+                            <option value="compra">Compra</option>
+                          </>
+                        )}
+                      </select>
+                    </label>
+
+                    <Button type="submit" className="w-full">
+                      Adicionar
                     </Button>
                   </div>
-                </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
 
-                <div className="flex justify-end gap-4">
-                  <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancelar
-                  </Button>
-                  <Button type="submit">
-                    <Save className="w-4 h-4 mr-2" />
-                    Salvar Perfil
-                  </Button>
-                </div>
-              </form>
+        <div className="flex gap-3 max-sm:flex-col w-full shadow-xl p-10 rounded-md">
+          <div className="grid md:grid-cols-3 sm:grid-cols-2 gap-2 flex-1 overflow-y-auto max-h-[650px]">
+            {DataGetEstoque?.horta?.produtos &&
+            DataGetEstoque.horta.produtos.length > 0 ? (
+              DataGetEstoque.horta.produtos.map((data, i) => (
+                <Dialog key={i}>
+                  <DialogTrigger>
+                    <div className="bg-green-500 hover:bg-green-600 transition-all justify-between flex flex-col text-white flex-shrink-0 max-h-[200px] p-2 rounded-lg">
+                      <div>
+                        <p className="text-xl font-semibold">
+                          {data.nm_produto}
+                        </p>
+                        <p className="text-sm">
+                          {data.ds_quantidade} {data.unidade_medida_padrao}
+                        </p>
+                      </div>
+                      <div>
+                        <p>{data.descricao}</p>
+                      </div>
+                      <div className="border-t mt-3 pt-3">
+                        <p className="text-sm">
+                          Última colheita: {data.dt_colheita}
+                        </p>
+                        <p className="text-sm">
+                          Último plantio: {data.dt_plantio}
+                        </p>
+                      </div>
+                    </div>
+                  </DialogTrigger>
+
+                  <DialogContent className="w-full">
+                    <ProductDialogContent
+                      product={data}
+                      token={token}
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ["Horta"] });
+                        MutateGetEstoque({ id_produtor: userId });
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+              ))
             ) : (
-              // Display Mode
-              <div className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  {/* Garden Info */}
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">{gardenData.name || "Nome da Horta"}</h3>
-                      <div className="flex items-start gap-2 text-muted-foreground">
-                        <MapPin className="w-4 h-4 mt-1 flex-shrink-0" />
-                        <span className="text-sm">{gardenData.address || "Endereço não informado"}</span>
-                      </div>
-                    </div>
-                    
-                    {gardenData.description && (
-                      <p className="text-sm text-muted-foreground">
-                        {gardenData.description}
-                      </p>
-                    )}
-                  </div>
-                  
-                  {/* Contact Info */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span className="font-medium">Coordenador:</span>
-                      <span>{gardenData.coordinator || "Não informado"}</span>
-                    </div>
-                    
-                    {gardenData.phone && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="w-4 h-4 text-primary" />
-                        <span>{gardenData.phone}</span>
-                      </div>
-                    )}
-                    
-                    {gardenData.email && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="w-4 h-4 text-primary" />
-                        <span>{gardenData.email}</span>
-                      </div>
-                    )}
-                    
-                    {gardenData.openHours && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4 text-primary" />
-                        <span>{gardenData.openHours}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {gardenData.objectives && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Objetivos</h4>
-                    <p className="text-sm text-muted-foreground">{gardenData.objectives}</p>
-                  </div>
-                )}
-                
-                <div className="pt-4 border-t">
-                  <Badge className="bg-primary text-primary-foreground">
-                    Horta Ativa
-                  </Badge>
-                </div>
+              <div className="text-center text-slate-500 col-span-full py-10">
+                <p className="text-lg font-medium">
+                  Nenhuma hortaliça cadastrada no estoque ainda 🌱 Certifique-se sua horta ja foi cadastrada!
+                </p>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
