@@ -36,7 +36,7 @@ export function Cardhorta({ data, JustView = false }: CardHortaPropr) {
         <div>
           <p>CNPJ</p>
           {data.cnpj ? (
-            <p className="text-green-500 font-bold">**.***.***/****-**</p>
+            <p className="text-green-500 font-bold">Possui CNPJ</p>
           ) : (
             <p className="text-slate-400 font-bold">Não cadastrado</p>
           )}

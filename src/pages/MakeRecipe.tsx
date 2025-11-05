@@ -286,29 +286,29 @@ export function MakeRecipe() {
           {data ? (
             <>
               <h2 className="text-2xl font-bold mt-5 mb-3">
-                {data.NomeDaReceita}
+                {data?.NomeDaReceita}
               </h2>
-              <p className="mb-5">{data.Descricao}</p>
+              <p className="mb-5">{data?.Descricao}</p>
 
               <h3 className="text-xl font-semibold mb-2">Ingredientes</h3>
               <ul className="list-disc ml-5 mb-5">
-                {data.Ingredientes.map((item: string, i: number) => (
+                {data?.Ingredientes.map((item: string, i: number) => (
                   <li key={i}>{item}</li>
                 ))}
               </ul>
 
               <h3 className="text-xl font-semibold mb-2">Instruções</h3>
               <ol className="list-decimal ml-5 mb-5">
-                {data.Instrucoes.map((step: string, i: number) => (
+                {data?.Instrucoes.map((step: string, i: number) => (
                   <li key={i}>{step}</li>
                 ))}
               </ol>
 
               <p className="mb-2">
-                <strong>Tempo de Preparo:</strong> {data.TempoDePreparo}
+                <strong>Tempo de Preparo:</strong> {data?.TempoDePreparo}
               </p>
               <p className="mb-5">
-                <strong>Porções:</strong> {data.Porcoes}
+                <strong>Porções:</strong> {data?.Porcoes}
               </p>
 
               <h3 className="text-xl font-semibold mb-2">Tabela Nutricional</h3>
