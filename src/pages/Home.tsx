@@ -194,13 +194,13 @@ const Home = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card
+                <div
                   key={index}
-                  className="group hover:shadow-elegant transition-all duration-300  border-none"
+                  className=" transition-all duration-300  "
                 >
                 
                     <CardHeader className="text-center">
-                      <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                      <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-4 ">
                         <Icon className="w-8 h-8 text-primary-foreground" />
                       </div>
                       <CardTitle className="text-xl group-hover:text-primary transition-colors">
@@ -213,7 +213,7 @@ const Home = () => {
                       </CardDescription>
                     </CardContent>
                  
-                </Card>
+                </div>
               );
             })}
           </div>

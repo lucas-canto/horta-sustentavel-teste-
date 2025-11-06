@@ -1,3 +1,4 @@
+import { useAuth } from "@/hooks/use-auth";
 import { aditionalsList } from "@/mock/aditionalsList";
 import { foodListMock } from "@/mock/foodList";
 import { foodRestriction } from "@/mock/foodRestriction";
@@ -22,6 +23,7 @@ export function MakeRecipe() {
   const [restrictions, setRestrictions] = useState<string[]>([]);
   const [aditionals, setAditionals] = useState<string[]>([]);
   const [finalPrompTags, setFinalPrompTags] = useState<RecipeRequest>();
+  const { userId } = useAuth();
 
   const recipeRef = useRef<HTMLDivElement>(null); // ref para gerar PDF
 
@@ -62,6 +64,7 @@ export function MakeRecipe() {
       Alimentos: selectedFoods.join(", "),
       Restrições: restrictions.join(", "),
       Adicionais: aditionals.join(", "),
+      id_produtor: userId ? userId.toString() : "",
     });
     setFinalPrompTags({
       foods: selectedFoods,
@@ -102,7 +105,9 @@ export function MakeRecipe() {
     <div className="flex-1  flex md:flex-row flex-col">
       {/* SEÇÃO ESQUERDA */}
       <div className="md:w-[46%] relative p-7">
-        <p className="text-xl shadow-slate-9 font-semibold">Monte sua receita</p>
+        <p className="text-xl shadow-slate-9 font-semibold">
+          Monte sua receita
+        </p>
 
         <div className="sticky top-10 shadow-2xl h-[80vh] gap-5 flex flex-col p-4 rounded-lg bg-white">
           {/* Tabs */}
@@ -272,17 +277,20 @@ export function MakeRecipe() {
       </div>
 
       {/* SEÇÃO DIREITA (RECEITA GERADA) */}
-      <div className="flex-1 pb-[400px] p-3 bg-[#49DE80]/30 overflow-y-auto">
-      <div
-            onClick={handleDownloadPDF}
-            className="no-print w-[200px] mb-3 cursor-pointer ml-auto p-2 text-white flex gap-2 items-center justify-center rounded-md bg-[#247C45]"
-          >
-            <Download width={20} height={20} />
-            Salvar como PDF
-          </div>
-        <div ref={recipeRef} className="bg-white rounded-tr-xl rounded-b-xl p-8">
-          
+      {/* SEÇÃO DIREITA (RECEITA GERADA) */}
+      <div className="flex-1 p-3 pb-[100px] bg-[#49DE80]/30 overflow-y-auto h-screen">
+        <div
+          onClick={handleDownloadPDF}
+          className="no-print w-[200px] mb-3 cursor-pointer ml-auto p-2 text-white flex gap-2 items-center justify-center rounded-md bg-[#247C45]"
+        >
+          <Download width={20} height={20} />
+          Salvar como PDF
+        </div>
 
+        <div
+          ref={recipeRef}
+          className="bg-white rounded-tr-xl rounded-b-xl p-8"
+        >
           {data ? (
             <>
               <h2 className="text-2xl font-bold mt-5 mb-3">

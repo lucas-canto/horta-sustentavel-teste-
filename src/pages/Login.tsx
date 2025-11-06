@@ -229,6 +229,7 @@ const Login = () => {
         <Button
           variant="ghost"
           size="sm"
+          onClick={()=>navigate('/')}
           className="mb-6 text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />

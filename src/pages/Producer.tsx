@@ -7,9 +7,17 @@ import { GetHorta } from "@/service/getHorta";
 import { PostAddEstoque } from "@/service/postAdd";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Building, Plus, RefreshCw, Sprout } from "lucide-react";
-import { useEffect } from "react";
+import {
+  Building,
+  HeartHandshake,
+  Plus,
+  RefreshCw,
+  Sprout,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import z from "zod";
 import { CadastrarHortaForm } from "./components/cadastrarHortaForm";
 import { Cardhorta } from "./components/cardHorta";
@@ -116,8 +124,33 @@ const Producer = () => {
     }
   }, [data]);
 
+  const [isActive, setIsActive] = useState<boolean>(true);
+  const navigate = useNavigate();
+
   return (
-    <div className="min-h-screen gap-10 flex flex-col bg-background px-10 pt-3">
+    <div className="min-h-screen gap-10 relative flex flex-col bg-background px-10 pt-3">
+      {isActive && (
+        <div className=" p-3 border fixed bottom-10 right-10 border-green-500 rounded-md shadow-xl shadow-green-400  bg-green-50   flex flex-col gap-3">
+          <div className="flex justify-between ">
+            <p className="text-secondary text-lg font-bold">
+              Esta sobrando alimentos? Doe!
+            </p>
+            <X
+              className="text-green-900 cursor-pointer"
+              onClick={() => setIsActive(false)}
+            />
+          </div>
+          <div className="flex justify-between items-center">
+            <p className="text-secondary w-[60%]">
+              Fazendo esta ação voce evita disperdicios e ajuda o proximo! Veja
+              as ONGs que recomendamos
+            </p>
+            <HeartHandshake size={40} className="text-white bg-red-600 p-2 rounded-full"/>
+          </div>
+          <Button onClick={() => navigate("/ongs")}>Ver ONGs</Button>
+        </div>
+      )}
+
       <div className="flex flex-col items-center text-3xl font-bold">
         <div className="p-3 bg-green-600 rounded-full">
           <Building className="text-white" />
@@ -143,7 +176,7 @@ const Producer = () => {
           <p className="font-bold">Controle de colheita</p>
         </div>
         {DataGetEstoque?.horta?.produtos &&
-          DataGetEstoque.horta.produtos.length <= 0 && (
+          DataGetEstoque.horta.produtos.length > 0 && (
             <Dialog>
               <DialogTrigger className="w-full flex justify-center">
                 <div className="">
@@ -305,7 +338,8 @@ const Producer = () => {
             ) : (
               <div className="text-center text-slate-500 col-span-full py-10">
                 <p className="text-lg font-medium">
-                  Nenhuma hortaliça cadastrada no estoque ainda 🌱 Certifique-se sua horta ja foi cadastrada!
+                  Nenhuma hortaliça cadastrada no estoque ainda 🌱 Certifique-se
+                  sua horta ja foi cadastrada!
                 </p>
               </div>
             )}

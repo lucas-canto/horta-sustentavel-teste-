@@ -19,6 +19,7 @@ import { GreenCalendarIntro } from "./pages/GreenCalendarIntro";
 import { GreenCalendarPrompt } from "./pages/GreenCalendarPrompt";
 import { GuideIntro } from "./pages/GuideIntro";
 import { GuidePrompt } from "./pages/GuidePrompt";
+import { OngsScreen } from "./pages/Ongs";
 import { ViewUser } from "./pages/ViewUser";
 import { AuthProvider } from "./providers/auth-provider";
 
@@ -50,6 +51,9 @@ const AppContent = () => {
             </ProtectedBaseRoute>
           }
         />
+
+        <Route path="/ongs" element={<OngsScreen />} />
+
         <Route path="/:id" element={<ViewUser />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/make-recipe" element={<MakeRecipe />} />
