@@ -42,6 +42,7 @@ export const foodListMock = [
   "Vagem",
   "Batata-doce",
   "Batata",
+  "Arroz",
   "Camu-camu",
   "Cebolete",
   "Cicória",
