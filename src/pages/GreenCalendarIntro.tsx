@@ -7,8 +7,8 @@ import { Link } from "react-router-dom";
 
 export function GreenCalendarIntro() {
   return (
-    <div className="flex-1 px-10 sm:justify-between pb-[90px] flex sm:flex-row">
-      <div className="w-[50%] mt-10">
+    <div className="px-10 flex-1 flex pb-[90px] sm:justify-between sm:flex-row flex-col">
+      <div className=" mt-10  sm:w-[45%]">
         <div className="flex flex-row flex-1 items-center">
           <p className="font-bold text-4xl">Calendário verde</p>
           <CalendarDaysIcon width={40} stroke="#49DE80" height={40} />
@@ -77,8 +77,8 @@ export function GreenCalendarIntro() {
           </p>
         </div>
       </div>
-      <div className="flex-1 flex justify-center">
-        <div className="gap-8 flex  flex-col fixed mt-[80px]">
+      <div className="sm:flex-1 justify-center flex">
+        <div className="gap-8 flex  flex-col sm:fixed mt-[80px]">
           <img
             src={Image}
             className="  w-[400px] h-[400px] rounded-full object-cover "

@@ -3,8 +3,8 @@ import { Sprout } from "lucide-react";
 import { Link } from "react-router-dom";
 export function GuideIntro() {
   return (
-    <div className="flex-1 px-10 sm:justify-between pb-[90px] flex sm:flex-row">
-      <div className="w-[50%] mt-10">
+    <div className="flex-1 px-10 sm:justify-between pb-[90px] max-md:flex-col flex sm:flex-row">
+      <div className="sm:w-[50%] mt-10">
         <div className="flex flex-row flex-1 items-center">
           <p className="font-bold text-4xl">Guia do cultivo</p>
           <Sprout width={40} stroke="#49DE80" height={40} />
@@ -87,7 +87,7 @@ export function GuideIntro() {
         </div>
       </div>
       <div className="flex-1 flex justify-center">
-        <div className="gap-8 flex  flex-col fixed mt-[80px]">
+        <div className="gap-8 flex  flex-col sm:fixed mt-[80px]">
           <img
             src={Image}
             className="  w-[400px] h-[400px] rounded-full object-cover "
