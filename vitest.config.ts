@@ -9,6 +9,12 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
+    },
+    testTimeout: 10000,
     coverage: {
       reporter: ['text', 'html'],
     },
